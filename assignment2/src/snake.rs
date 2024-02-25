@@ -33,6 +33,15 @@ pub struct Block {
     pub y: i32,
 }
 
+impl Block {
+    pub fn is_equal(&self, block: &Block) -> bool {
+        if self.x == block.x && self.y == block.y {
+            return true;
+        }
+        false
+    }
+}
+
 pub struct Snake {
     pub moving_direction: Direction,
     pub body: LinkedList<Block>,
@@ -102,21 +111,25 @@ impl Snake {
 
     /// Get the head position
     pub fn head_position(&self) -> (i32, i32) {
-        unimplemented!();
+        let block = self.body.front().unwrap();
+
+        (block.x, block.y)
     }
 
     /// Get the head direction
     pub fn head_direction(&self) -> Direction {
-        unimplemented!();
+        self.moving_direction
     }
 
     /// Increase the snake length
     pub fn increase_length(&mut self) {
-        unimplemented!();
+        // unwrap takes ownership , therefore before calling unwrap , use as_ref
+        let block = self.last_removed_block.as_ref().unwrap();
+        self.body.push_back(block.to_owned());
     }
 
     /// Return snake body as a linked list
     pub fn get_body(&self) -> LinkedList<Block> {
-        unimplemented!();
+        self.body.clone()
     }
 }

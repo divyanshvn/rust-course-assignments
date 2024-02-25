@@ -4,11 +4,14 @@ use rand::{thread_rng, Rng};
 use snake::{Direction, Snake};
 use utils::{draw_block, draw_rectange};
 
+use crate::snake::Block;
+
 const MOVING_SPEED: f64 = 0.1;
 const NUM_FOODS: usize = 3;
 const FOOD_DECAY_SPEED: f32 = 0.002;
 const INIT_FOOD_LIFE: f32 = 1.0;
 
+#[derive(Debug)]
 pub struct Food {
     pub x: i32,
     pub y: i32,
@@ -141,27 +144,105 @@ impl Game {
 
     /// Remove expired foods
     pub fn update_food_expired(&mut self) {
-        unimplemented!();
+        let mut i = 0;
+        loop {
+            if i >= self.foods.len() {
+                break;
+            }
+
+            if self.foods[i].time < 0.1 {
+                self.foods.remove(i);
+                continue;
+            }
+            i += 1;
+        } 
     }
 
     /// Subtract food time parameter
     fn update_food_life(&mut self) {
-        unimplemented!();
+        for i in 0..self.foods.len() {
+            self.foods[i].time -= FOOD_DECAY_SPEED;
+        }
     }
 
     /// Check if the snake is eating any food
     fn check_eating(&mut self) {
-        unimplemented!();
+        let pos = self.snake.head_position();
+
+        for i in 0..self.foods.len() {
+            let food = & self.foods[i];
+            if food.x == pos.0 && food.y == pos.1 {
+                self.snake.increase_length();
+                self.foods.remove(i);
+                return;
+            }
+        }
     }
 
     /// Check if the snake is alive
     fn check_snake_alive(&self) -> bool {
-        unimplemented!();
+        let head_pos = self.snake.head_position();
+    
+        let next_pos = match self.snake.head_direction() {
+            Direction::Up => Block {
+                x: head_pos.0,
+                y: head_pos.1 + 1
+            },
+            Direction::Down => Block {
+                x: head_pos.0,
+                y: head_pos.1 - 1
+            },
+            Direction::Left => Block {
+                x: head_pos.0 - 1,
+                y: head_pos.1 
+            },
+            Direction::Right => Block {
+                x: head_pos.0 + 1,
+                y: head_pos.1
+            }
+        };
+
+        if next_pos.x >= self.width || next_pos.x <= 0 || next_pos.y >= self.height || next_pos.y <= 0 {
+            return false;
+        }
+
+        // iter does not take ownership of the object, therefore since it wasn't assigned to any var , it would have gone out of scope and therefore used into_iter
+        let mut body_iter = self.snake.get_body().into_iter();
+        let mut next_iter = body_iter.next();
+        
+        loop {
+            if next_iter.is_none() {
+                break;
+            }
+
+            if next_pos.is_equal(&next_iter.unwrap()) {
+                return false;
+            }
+
+            next_iter = body_iter.next();
+        }
+
+        true
     }
 
     /// Add food at NUM_FOODS number of places
     fn update_food(&mut self) {
-        unimplemented!();
+        if self.foods.len() >= NUM_FOODS {
+            return;
+        }
+
+        let insert_num = NUM_FOODS - self.foods.len();
+        let mut rng = thread_rng();
+
+        for _i in 0..insert_num {
+            let food = Food {
+                x: rng.gen::<i32>(),
+                y: rng.gen::<i32>(),
+                time: INIT_FOOD_LIFE
+            };
+            println!("New food: {:?}", food);
+            self.foods.push(food);
+        }
     }
 }
 
